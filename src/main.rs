@@ -1,8 +1,10 @@
-use iced::{widget::{button::Style, slider, Button, Column, Text}, Background, Border, Color, Font, Shadow, Theme};
+use iced::{
+    widget::{row, Column, Row, Text}, Font, Length
+};
 
 pub fn main() -> iced::Result {
-    iced::application("Термометер", SocketApp::update, SocketApp::view)
-        .window_size(iced::Size::new(450f32, 225f32))
+    iced::application("Устройства", SmartDeviceApp::update, SmartDeviceApp::view)
+        .window_size(iced::Size::new(900f32, 225f32))
         .theme(|_| iced::Theme::GruvboxDark)
         .run()
 }
@@ -19,7 +21,7 @@ enum Message {
 }
 
 #[derive(Default)]
-struct SocketApp {
+struct SmartDeviceApp {
     power: TermoWidget,
     socket: SocketWidget,
 }
@@ -36,70 +38,58 @@ struct SocketWidget {
     value: f32,
 }
 
-impl SocketApp {
-
+impl SmartDeviceApp {
     fn update(&mut self, message: Message) {
         match message {
-            Message::TermometerOnline => {},
-            Message::TermometerOffline => {},
-            Message::TemperatureChanged(value) => {},
+            Message::TermometerOnline => {}
+            Message::TermometerOffline => {}
+            Message::TemperatureChanged(value) => {}
 
-            Message::SocketOnline => {},
-            Message::SocketOffline => {},
-            Message::PowerChanged(value) => {},
+            Message::SocketOnline => {}
+            Message::SocketOffline => {}
+            Message::PowerChanged(value) => {}
         }
     }
 
-    fn view(&self) -> Column<Message> {
-         let roboto = Font::with_name("Roboto");
+    fn view(&self) -> Row<Message> {
+        let roboto = Font::with_name("Roboto");
 
-        let power_button = Button::new(
-            Text::new(if self.power_on { "Включено" } else { "Выключено" })
-                .font(roboto)
-                .size(20)
+        let socket_label = Text::new("Розетка").font(roboto).size(32);
 
-        )
-        .on_press(Message::TogglePower)
-        .padding(12)
-        .style(|t: &Theme, _| {
-            let palette = t.extended_palette();
+        let socket_state = Text::new("Статуc: Offine").font(roboto).size(24);
 
-            match self.power_on {
-                true => Style {
-                    background: Some(Background::Color(palette.primary.base.color)),
-                    text_color: Color::WHITE,
-                    border: Border::default(),
-                    shadow: Shadow::default(),
-                },
-                false => Style {
-                    background : Some(Background::Color(palette.danger.base.color)),
-                    text_color: Color::WHITE,
-                    border: Border::default(),
-                    shadow: Shadow::default(),
-                }
-            }
-
-        });
-
-        let power_label = Text::new("Розетка")
-            .font(roboto)
-            .size(32);
-
-        let power_slider = slider(1.0..=100.0, self.power, Message::SliderChanged)
-            .step(1.0);
-
-        let power_display = Text::new(format!("Текущая мощность: {:.1}", self.power))
+        let socket_display = Text::new(format!("Текущая мощность: {:.1}", 0))
             .font(roboto)
             .size(24);
 
-        let content = Column::new()
+        let socket_widget = Column::new()
+            .spacing(12)
+            .padding(20)
+            .width(Length::Fill)
+            .push(socket_label)
+            .push(socket_state)
+            .push(socket_display);
+
+        let termo_label = Text::new("Термометр").font(roboto).size(32);
+
+        let termo_state = Text::new("Статуc: Offine").font(roboto).size(24);
+
+        let termo_display = Text::new(format!("Текущая температура: {:.1}", 0))
+            .font(roboto)
+            .size(24);
+
+        let termo_widget = Column::new()
             .spacing(10)
             .padding(20)
-            .push(power_label)
-            .push( power_display)
-            .push(power_slider)
-            .push(power_button);
+            .width(Length::Fill)
+            .push(termo_label)
+            .push(termo_state)
+            .push(termo_display);
 
-        content.into()
+        let packed = Row::new()
+            .push(socket_widget)
+            .push(termo_widget);
+
+        packed
     }
 }

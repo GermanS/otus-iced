@@ -1,4 +1,7 @@
-use iced::{widget::{button::Style, slider, Button, Column, Text}, Background, Border, Color, Font, Shadow, Theme};
+use iced::{
+    Background, Border, Color, Font, Shadow, Theme,
+    widget::{Button, Column, Text, button::Style, slider},
+};
 
 pub fn main() -> iced::Result {
     iced::application("Термометер", SocketApp::update, SocketApp::view)
@@ -6,7 +9,6 @@ pub fn main() -> iced::Result {
         .theme(|_| iced::Theme::GruvboxDark)
         .run()
 }
-
 
 #[derive(Debug, Clone)]
 enum Message {
@@ -21,7 +23,6 @@ struct SocketApp {
 }
 
 impl SocketApp {
-
     fn update(&mut self, message: Message) {
         match message {
             Message::TogglePower => {
@@ -40,13 +41,16 @@ impl SocketApp {
     }
 
     fn view(&self) -> Column<Message> {
-         let roboto = Font::with_name("Roboto");
+        let roboto = Font::with_name("Roboto");
 
         let power_button = Button::new(
-            Text::new(if self.power_on { "Включено" } else { "Выключено" })
-                .font(roboto)
-                .size(20)
-
+            Text::new(if self.power_on {
+                "Включено"
+            } else {
+                "Выключено"
+            })
+            .font(roboto)
+            .size(20),
         )
         .on_press(Message::TogglePower)
         .padding(12)
@@ -61,21 +65,17 @@ impl SocketApp {
                     shadow: Shadow::default(),
                 },
                 false => Style {
-                    background : Some(Background::Color(palette.danger.base.color)),
+                    background: Some(Background::Color(palette.danger.base.color)),
                     text_color: Color::WHITE,
                     border: Border::default(),
                     shadow: Shadow::default(),
-                }
+                },
             }
-
         });
 
-        let power_label = Text::new("Розетка")
-            .font(roboto)
-            .size(32);
+        let power_label = Text::new("Розетка").font(roboto).size(32);
 
-        let power_slider = slider(1.0..=100.0, self.power, Message::SliderChanged)
-            .step(1.0);
+        let power_slider = slider(1.0..=100.0, self.power, Message::SliderChanged).step(1.0);
 
         let power_display = Text::new(format!("Текущая мощность: {:.1}", self.power))
             .font(roboto)
@@ -85,7 +85,7 @@ impl SocketApp {
             .spacing(10)
             .padding(20)
             .push(power_label)
-            .push( power_display)
+            .push(power_display)
             .push(power_slider)
             .push(power_button);
 

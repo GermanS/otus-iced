@@ -1,4 +1,7 @@
-use iced::{widget::{button::Style, slider, Button, Column, Text}, Background, Border, Color, Font, Shadow, Theme};
+use iced::{
+    Background, Border, Color, Font, Shadow, Theme,
+    widget::{Button, Column, Text, button::Style, slider},
+};
 
 pub fn main() -> iced::Result {
     iced::application("Термометер", ThermometerApp::update, ThermometerApp::view)
@@ -6,7 +9,6 @@ pub fn main() -> iced::Result {
         .theme(|_| iced::Theme::GruvboxDark)
         .run()
 }
-
 
 #[derive(Debug, Clone)]
 enum Message {
@@ -21,7 +23,6 @@ struct ThermometerApp {
 }
 
 impl ThermometerApp {
-
     fn update(&mut self, message: Message) {
         match message {
             Message::TogglePower => {
@@ -40,13 +41,16 @@ impl ThermometerApp {
     }
 
     fn view(&self) -> Column<Message> {
-         let roboto = Font::with_name("Roboto");
+        let roboto = Font::with_name("Roboto");
 
         let power_button = Button::new(
-            Text::new(if self.power_on { "Включено" } else { "Выключено" })
-                .font(roboto)
-                .size(20)
-
+            Text::new(if self.power_on {
+                "Включено"
+            } else {
+                "Выключено"
+            })
+            .font(roboto)
+            .size(20),
         )
         .on_press(Message::TogglePower)
         .padding(12)
@@ -61,25 +65,23 @@ impl ThermometerApp {
                     shadow: Shadow::default(),
                 },
                 false => Style {
-                    background : Some(Background::Color(palette.danger.base.color)),
+                    background: Some(Background::Color(palette.danger.base.color)),
                     text_color: Color::WHITE,
                     border: Border::default(),
                     shadow: Shadow::default(),
-                }
+                },
             }
-
         });
 
-        let thermometer_label = Text::new("Термометр")
-            .font(roboto)
-            .size(32);
+        let thermometer_label = Text::new("Термометр").font(roboto).size(32);
 
-        let temperature_slider = slider(1.0..=100.0, self.temperature, Message::SliderChanged)
-            .step(1.0);
+        let temperature_slider =
+            slider(1.0..=100.0, self.temperature, Message::SliderChanged).step(1.0);
 
-        let temperature_display = Text::new(format!("Текущая температура: {:.1}", self.temperature))
-            .font(roboto)
-            .size(24);
+        let temperature_display =
+            Text::new(format!("Текущая температура: {:.1}", self.temperature))
+                .font(roboto)
+                .size(24);
 
         let content = Column::new()
             .spacing(10)
