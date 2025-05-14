@@ -1,7 +1,10 @@
+use std::{io::Write, net::TcpStream};
+
 use iced::{
     Background, Border, Color, Font, Shadow, Theme,
     widget::{Button, Column, Text, button::Style, slider},
 };
+use otus_iced::{power::Power, socket::Socket, state::DeviceState};
 
 pub fn main() -> iced::Result {
     iced::application("Термометер", SocketApp::update, SocketApp::view)
@@ -18,7 +21,7 @@ enum Message {
 
 #[derive(Default)]
 struct SocketApp {
-    power_on: bool,
+    state: bool,
     power: f32,
 }
 
@@ -26,16 +29,20 @@ impl SocketApp {
     fn update(&mut self, message: Message) {
         match message {
             Message::TogglePower => {
-                self.power_on = !self.power_on;
+                self.state = !self.state;
 
-                if !self.power_on {
+                if !self.state {
                     self.power = 0f32;
                 }
+
+                self.notify();
             }
             Message::SliderChanged(value) => {
-                if self.power_on {
+                if self.state {
                     self.power = value;
                 }
+
+                self.notify();
             }
         }
     }
@@ -44,7 +51,7 @@ impl SocketApp {
         let roboto = Font::with_name("Roboto");
 
         let power_button = Button::new(
-            Text::new(if self.power_on {
+            Text::new(if self.state {
                 "Включено"
             } else {
                 "Выключено"
@@ -57,7 +64,7 @@ impl SocketApp {
         .style(|t: &Theme, _| {
             let palette = t.extended_palette();
 
-            match self.power_on {
+            match self.state {
                 true => Style {
                     background: Some(Background::Color(palette.primary.base.color)),
                     text_color: Color::WHITE,
@@ -90,5 +97,13 @@ impl SocketApp {
             .push(power_button);
 
         content.into()
+    }
+
+    fn notify(&self) {
+        let socket = Socket::new(Power::new(self.power), DeviceState::new(self.state));
+
+        let mut tcp_stream = TcpStream::connect("localhost:8080").expect("Unable to connect");
+
+        tcp_stream.write_all(socket.to_string().as_bytes()).unwrap();
     }
 }

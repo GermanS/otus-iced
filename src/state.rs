@@ -4,6 +4,10 @@ use std::{error::Error, fmt::Display, ops::Deref, str::FromStr};
 pub struct DeviceState(bool);
 
 impl DeviceState {
+    pub fn new(state: bool) -> Self {
+        Self(state)
+    }
+
     pub fn get(&self) -> bool {
         self.0
     }
