@@ -12,7 +12,7 @@ name = "server"
 path = "src/main.rs"
 
 [[example]]
-name = "cli_termometer"
+name = "cli_termo"
 
 [[example]]
 name = "cli_socket"

@@ -5,7 +5,7 @@ mod socket_tests {
 
     #[test]
     fn positive_f32_in_string() {
-        let message = "Socket 21.5 W";
+        let message = "Socket 21.5W State: off";
 
         let socket = Socket::from_str(message);
 
@@ -15,7 +15,7 @@ mod socket_tests {
 
     #[test]
     fn positive_u32_in_message() {
-        let message = "Socket  1500 W";
+        let message = "Socket  1500W State: on";
 
         let result = Socket::from_str(message);
 
@@ -40,33 +40,42 @@ mod termometer_test {
 
     #[test]
     fn positive_f32_in_string() {
-        let message = "Termometer 21.5 C";
+        let message = "Termometer 21.5C State: on";
 
-        let termometer = Termometer::from_str(message);
+        let result = Termometer::from_str(message);
 
-        assert!(termometer.is_ok(), "Looks like string has been parsed well");
+        assert!(result.is_ok(), "Looks like string has been parsed well");
+
+        let termometer = result.unwrap();
+
         assert!(
-            termometer.unwrap().temperature().get() == 21.5,
+            termometer.temperature().get() == 21.5,
             "Temperature is correct"
         );
+
+        assert!(termometer.state().get(), "... state is 'ON'");
     }
 
     #[test]
     fn positive_u32_in_message() {
-        let message = "Termometer 21 C";
+        let message = "Termometer 21C State: on";
 
-        let termometer = Termometer::from_str(message);
+        let result = Termometer::from_str(message);
+        assert!(result.is_ok(), "Looks like string has been parsed well");
 
-        assert!(termometer.is_ok(), "Looks like string has been parsed well");
+        let termometer = result.unwrap();
+
         assert!(
-            termometer.unwrap().temperature().get() == 21.0,
+            termometer.temperature().get() == 21.0,
             "Temperature is correct"
         );
+
+        assert!(termometer.state().get(), "... state is 'ON'");
     }
 
     #[test]
     fn negative_missing_temperature() {
-        let message = "Termometer x C";
+        let message = "Termometer xC";
 
         let termometer = Termometer::from_str(message);
 

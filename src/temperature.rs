@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{error::Error, fmt::Display, str::FromStr};
 
 #[derive(Debug, Default)]
 pub struct Temperature(f32);
@@ -30,5 +30,21 @@ impl Temperature {
 impl Display for Temperature {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:.3}", self.get())
+    }
+}
+
+impl FromStr for Temperature {
+    type Err = Box<dyn Error>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(value) = s.parse::<u32>() {
+            return Ok(Self::new(value as f32));
+        }
+
+        if let Ok(value) = s.parse::<f32>() {
+            return Ok(Self::new(value));
+        }
+
+        Err("Can't parse temperature".into())
     }
 }

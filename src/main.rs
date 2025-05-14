@@ -1,5 +1,6 @@
 use iced::{
-    widget::{row, Column, Row, Text}, Font, Length
+    Font, Length,
+    widget::{Column, Row, Text, row},
 };
 
 pub fn main() -> iced::Result {
@@ -86,9 +87,7 @@ impl SmartDeviceApp {
             .push(termo_state)
             .push(termo_display);
 
-        let packed = Row::new()
-            .push(socket_widget)
-            .push(termo_widget);
+        let packed = Row::new().push(socket_widget).push(termo_widget);
 
         packed
     }
