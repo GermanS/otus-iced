@@ -7,10 +7,13 @@ mod socket_tests {
     fn positive_f32_in_string() {
         let message = "Socket 21.5W State: off";
 
-        let socket = Socket::from_str(message);
+        let result = Socket::from_str(message);
+        assert!(result.is_ok(), "Looks like string has been parsed well");
 
-        assert!(socket.is_ok(), "Looks like string has been parsed well");
-        assert!(socket.unwrap().power().get() == 21.5, "Power is correct");
+        let socket = result.unwrap();
+
+        assert!(socket.power().get() == 21.5, "Power is correct");
+        assert!(!socket.state().get(), "... state is 'off'");
     }
 
     #[test]
@@ -18,9 +21,12 @@ mod socket_tests {
         let message = "Socket  1500W State: on";
 
         let result = Socket::from_str(message);
-
         assert!(result.is_ok(), "Looks like string has been parsed well");
-        assert!(result.unwrap().power().get() == 1500.0, "Power is correct");
+
+        let socket = result.unwrap();
+
+        assert!(socket.power().get() == 1500.0, "Power is correct");
+        assert!(socket.state().get(), "... state is 'on'");
     }
 
     #[test]
@@ -53,7 +59,7 @@ mod termometer_test {
             "Temperature is correct"
         );
 
-        assert!(termometer.state().get(), "... state is 'ON'");
+        assert!(termometer.state().get(), "... state is 'on'");
     }
 
     #[test]
@@ -70,7 +76,7 @@ mod termometer_test {
             "Temperature is correct"
         );
 
-        assert!(termometer.state().get(), "... state is 'ON'");
+        assert!(termometer.state().get(), "... state is 'on'");
     }
 
     #[test]

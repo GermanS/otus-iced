@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{error::Error, fmt::Display, str::FromStr};
 
 #[derive(Debug, Default)]
 pub struct Power(f32);
@@ -34,5 +34,21 @@ impl Power {
 impl Display for Power {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.get())
+    }
+}
+
+impl FromStr for Power {
+    type Err = Box<dyn Error>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(value) = s.parse::<u32>() {
+            return Ok(Self::new(value as f32));
+        }
+
+        if let Ok(value) = s.parse::<f32>() {
+            return Ok(Self::new(value));
+        }
+
+        Err("Can't parse power".into())
     }
 }
