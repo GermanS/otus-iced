@@ -1,7 +1,10 @@
+use std::{io::Write, net::TcpStream};
+
 use iced::{
     Background, Border, Color, Font, Shadow, Theme,
     widget::{Button, Column, Text, button::Style, slider},
 };
+use otus_iced::{state::DeviceState, temperature::Temperature, termometer::Termometer};
 
 pub fn main() -> iced::Result {
     iced::application("Термометер", ThermometerApp::update, ThermometerApp::view)
@@ -31,6 +34,8 @@ impl ThermometerApp {
                 if !self.state {
                     self.temperature = 0f32;
                 }
+
+                self.notify();
             }
             Message::SliderChanged(value) => {
                 if self.state {
@@ -92,5 +97,13 @@ impl ThermometerApp {
             .push(power_button);
 
         content.into()
+    }
+
+    fn notify(&self) {
+        let termo = Termometer::new(Temperature::new(self.temperature), DeviceState::new(self.state));
+
+        let mut tcp_stream = TcpStream::connect("localhost:8080").expect("Unable to connect");
+
+        tcp_stream.write_all(termo.to_string().as_bytes()).unwrap();
     }
 }
