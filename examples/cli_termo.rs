@@ -33,7 +33,7 @@ impl ThermometerApp {
                 }
             }
             Message::SliderChanged(value) => {
-                if self.satte {
+                if self.state {
                     self.temperature = value;
                 }
             }
