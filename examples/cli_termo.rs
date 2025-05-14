@@ -100,7 +100,10 @@ impl ThermometerApp {
     }
 
     fn notify(&self) {
-        let termo = Termometer::new(Temperature::new(self.temperature), DeviceState::new(self.state));
+        let termo = Termometer::new(
+            Temperature::new(self.temperature),
+            DeviceState::new(self.state),
+        );
 
         let mut tcp_stream = TcpStream::connect("localhost:8080").expect("Unable to connect");
 
