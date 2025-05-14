@@ -18,7 +18,7 @@ enum Message {
 
 #[derive(Default)]
 struct ThermometerApp {
-    power_on: bool,
+    state: bool,
     temperature: f32,
 }
 
@@ -26,14 +26,14 @@ impl ThermometerApp {
     fn update(&mut self, message: Message) {
         match message {
             Message::TogglePower => {
-                self.power_on = !self.power_on;
+                self.state = !self.state;
 
-                if !self.power_on {
+                if !self.state {
                     self.temperature = 0f32;
                 }
             }
             Message::SliderChanged(value) => {
-                if self.power_on {
+                if self.satte {
                     self.temperature = value;
                 }
             }
@@ -44,7 +44,7 @@ impl ThermometerApp {
         let roboto = Font::with_name("Roboto");
 
         let power_button = Button::new(
-            Text::new(if self.power_on {
+            Text::new(if self.state {
                 "Включено"
             } else {
                 "Выключено"
@@ -57,7 +57,7 @@ impl ThermometerApp {
         .style(|t: &Theme, _| {
             let palette = t.extended_palette();
 
-            match self.power_on {
+            match self.state {
                 true => Style {
                     background: Some(Background::Color(palette.primary.base.color)),
                     text_color: Color::WHITE,
