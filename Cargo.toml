@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-iced = {  version = "0.13" }
+tokio ={ version = "*" }
+iced = {  version = "0.13", features = [ "tokio"] }
 regex = { version = "1.11.1" }
 
 [[bin]]

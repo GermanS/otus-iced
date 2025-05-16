@@ -1,24 +1,23 @@
 use iced::{
-    Font, Length,
-    widget::{Column, Row, Text},
+    futures::{channel::mpsc, SinkExt, Stream, StreamExt}, stream, widget::{Column, Row, Text}, Font, Length, Subscription
 };
+use otus_iced::{socket::Socket, termometer::Termometer};
 
 pub fn main() -> iced::Result {
     iced::application("Устройства", SmartDeviceApp::update, SmartDeviceApp::view)
         .window_size(iced::Size::new(900f32, 225f32))
         .theme(|_| iced::Theme::GruvboxDark)
+        .subscription(SmartDeviceApp::subscription)
         .run()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum Message {
-    TermometerOnline,
+    TermometerOnline(Termometer),
     TermometerOffline,
-    TemperatureChanged(f32),
 
-    SocketOnline,
+    SocketOnline(Socket),
     SocketOffline,
-    PowerChanged(f32),
 }
 
 #[derive(Default)]
@@ -58,39 +57,34 @@ impl SocketWidget {
 }
 
 impl SmartDeviceApp {
-    fn termometer_online(&mut self) {
+    fn termometer_online(&mut self, t: Termometer) {
         self.termometer.state = true;
+        self.termometer.value = t.temperature().get();
     }
 
     fn termometer_offline(&mut self) {
         self.termometer.state = false;
+        self.termometer.value = 0.0;
     }
 
-    fn temperature(&mut self, value: f32) {
-        self.termometer.value = value;
-    }
-
-    fn socket_online(&mut self) {
+    fn socket_online(&mut self,  s: Socket) {
         self.socket.state = true;
+        self.socket.value = s.power().get();
     }
 
     fn socket_offline(&mut self) {
         self.socket.state = false;
+        self.socket.value = 0.0;
     }
 
-    fn power(&mut self, value: f32) {
-        self.socket.value = value;
-    }
 
     fn update(&mut self, message: Message) {
         match message {
-            Message::TermometerOnline => self.termometer_online(),
+            Message::TermometerOnline(t) => self.termometer_online(t),
             Message::TermometerOffline => self.termometer_offline(),
-            Message::TemperatureChanged(value) => self.temperature(value),
 
-            Message::SocketOnline => self.socket_online(),
+            Message::SocketOnline(s) => self.socket_online(s),
             Message::SocketOffline => self.socket_offline(),
-            Message::PowerChanged(value) => self.power(value),
         }
     }
 
@@ -103,7 +97,7 @@ impl SmartDeviceApp {
             .font(roboto)
             .size(24);
 
-        let socket_display = Text::new(format!("Текущая мощность: {:.2}", self.socket.value))
+        let socket_display = Text::new(format!("Текущая мощность: {:.1}", self.socket.value))
             .font(roboto)
             .size(24);
 
@@ -133,8 +127,53 @@ impl SmartDeviceApp {
             .push(termo_state)
             .push(termo_display);
 
-        let packed = Row::new().push(socket_widget).push(termo_widget);
+        Row::new().push(socket_widget).push(termo_widget)
 
-        packed
+
+    }
+
+
+    fn subscription(&self) -> Subscription<Message> {
+        Subscription::run(Self::some_worker)
+    }
+
+    fn some_worker() -> impl Stream<Item = Message> {
+        stream::channel(32, |mut output| async move {
+
+            let (_sender, mut receiver) = mpsc::channel(100);
+
+            loop {
+                let input = receiver.select_next_some().await;
+
+                match input {
+                    InputData::SocketIndicator(s) => {
+
+                        let message = if s.state().get() {
+                            Message::SocketOnline(s)
+                        } else {
+                            Message::SocketOffline
+                        };
+
+                        let _ = output.send(message).await;
+                    },
+                    InputData::TermoIndicator(t) => {
+
+                        let message = if t.state().get() {
+                            Message::TermometerOnline(t)
+                        } else {
+                            Message::TermometerOffline
+                        };
+
+                        let _ = output.send(message).await;
+                    },
+                }
+            }
+        })
     }
 }
+
+enum InputData {
+    SocketIndicator(Socket),
+    TermoIndicator(Termometer)
+}
+
