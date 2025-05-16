@@ -1,5 +1,8 @@
 use iced::{
-    futures::{channel::mpsc, SinkExt, Stream, StreamExt}, stream, widget::{Column, Row, Text}, Font, Length, Subscription
+    Font, Length, Subscription,
+    futures::{SinkExt, Stream, StreamExt, channel::mpsc},
+    stream,
+    widget::{Column, Row, Text},
 };
 use otus_iced::{socket::Socket, termometer::Termometer};
 
@@ -22,8 +25,8 @@ enum Message {
 
 #[derive(Default)]
 struct SmartDeviceApp {
-    termometer: TermoWidget,
-    socket: SocketWidget,
+    termo_widget: TermoWidget,
+    socket_widget: SocketWidget,
 }
 
 #[derive(Default)]
@@ -35,8 +38,15 @@ struct TermoWidget {
 impl TermoWidget {
     fn status(&self) -> &str {
         match self.state {
-            true => "Online",
-            _ => "Offline",
+            true => "Статуc: Online",
+            _ => "Статуc: Offline",
+        }
+    }
+
+    fn value(&self) -> String {
+        match self.state {
+            true => format!("Текущая мощность: {:.1}", self.value),
+            _ => "N/A".into(),
         }
     }
 }
@@ -54,29 +64,35 @@ impl SocketWidget {
             _ => "Offline",
         }
     }
+
+    fn value(&self) -> String {
+        match self.state {
+            true => format!("Текущая температура: {:.1}", self.value),
+            _ => "N/A".into(),
+        }
+    }
 }
 
 impl SmartDeviceApp {
     fn termometer_online(&mut self, t: Termometer) {
-        self.termometer.state = true;
-        self.termometer.value = t.temperature().get();
+        self.termo_widget.state = true;
+        self.termo_widget.value = t.temperature().get();
     }
 
     fn termometer_offline(&mut self) {
-        self.termometer.state = false;
-        self.termometer.value = 0.0;
+        self.termo_widget.state = false;
+        self.termo_widget.value = 0.0;
     }
 
-    fn socket_online(&mut self,  s: Socket) {
-        self.socket.state = true;
-        self.socket.value = s.power().get();
+    fn socket_online(&mut self, s: Socket) {
+        self.socket_widget.state = true;
+        self.socket_widget.value = s.power().get();
     }
 
     fn socket_offline(&mut self) {
-        self.socket.state = false;
-        self.socket.value = 0.0;
+        self.socket_widget.state = false;
+        self.socket_widget.value = 0.0;
     }
-
 
     fn update(&mut self, message: Message) {
         match message {
@@ -93,13 +109,9 @@ impl SmartDeviceApp {
 
         let socket_label = Text::new("Розетка").font(roboto).size(32);
 
-        let socket_state = Text::new(format!("Статуc: {}", self.socket.status()))
-            .font(roboto)
-            .size(24);
+        let socket_state = Text::new(self.socket_widget.status()).font(roboto).size(24);
 
-        let socket_display = Text::new(format!("Текущая мощность: {:.1}", self.socket.value))
-            .font(roboto)
-            .size(24);
+        let socket_display = Text::new(self.socket_widget.value()).font(roboto).size(24);
 
         let socket_widget = Column::new()
             .spacing(12)
@@ -111,13 +123,9 @@ impl SmartDeviceApp {
 
         let termo_label = Text::new("Термометр").font(roboto).size(32);
 
-        let termo_state = Text::new(format!("Статуc: {}", self.termometer.status()))
-            .font(roboto)
-            .size(24);
+        let termo_state = Text::new(self.termo_widget.status()).font(roboto).size(24);
 
-        let termo_display = Text::new(format!("Текущая температура: {:.1}", self.termometer.value))
-            .font(roboto)
-            .size(24);
+        let termo_display = Text::new(self.termo_widget.value()).font(roboto).size(24);
 
         let termo_widget = Column::new()
             .spacing(10)
@@ -128,10 +136,7 @@ impl SmartDeviceApp {
             .push(termo_display);
 
         Row::new().push(socket_widget).push(termo_widget)
-
-
     }
-
 
     fn subscription(&self) -> Subscription<Message> {
         Subscription::run(Self::some_worker)
@@ -139,7 +144,6 @@ impl SmartDeviceApp {
 
     fn some_worker() -> impl Stream<Item = Message> {
         stream::channel(32, |mut output| async move {
-
             let (_sender, mut receiver) = mpsc::channel(100);
 
             loop {
@@ -147,7 +151,6 @@ impl SmartDeviceApp {
 
                 match input {
                     InputData::SocketIndicator(s) => {
-
                         let message = if s.state().get() {
                             Message::SocketOnline(s)
                         } else {
@@ -155,9 +158,8 @@ impl SmartDeviceApp {
                         };
 
                         let _ = output.send(message).await;
-                    },
+                    }
                     InputData::TermoIndicator(t) => {
-
                         let message = if t.state().get() {
                             Message::TermometerOnline(t)
                         } else {
@@ -165,7 +167,7 @@ impl SmartDeviceApp {
                         };
 
                         let _ = output.send(message).await;
-                    },
+                    }
                 }
             }
         })
@@ -174,6 +176,5 @@ impl SmartDeviceApp {
 
 enum InputData {
     SocketIndicator(Socket),
-    TermoIndicator(Termometer)
+    TermoIndicator(Termometer),
 }
-
