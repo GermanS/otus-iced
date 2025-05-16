@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use iced::{
-    Font, Length, Subscription,
-    futures::{SinkExt, Stream, StreamExt, channel::mpsc},
-    stream,
-    widget::{Column, Row, Text},
+    futures::{channel::mpsc, SinkExt, Stream, StreamExt}, stream, widget::{Column, Row, Text}, Font, Length, Subscription
 };
 use otus_iced::{socket::Socket, termometer::Termometer};
+
+use tokio::{io::{AsyncReadExt, AsyncWriteExt}, net::{TcpListener, TcpStream}};
+
 
 pub fn main() -> iced::Result {
     iced::application("Устройства", SmartDeviceApp::update, SmartDeviceApp::view)
@@ -12,6 +14,7 @@ pub fn main() -> iced::Result {
         .theme(|_| iced::Theme::GruvboxDark)
         .subscription(SmartDeviceApp::subscription)
         .run()
+
 }
 
 #[derive(Debug)]
@@ -23,10 +26,22 @@ enum Message {
     SocketOffline,
 }
 
-#[derive(Default)]
+//#[derive(Default)]
 struct SmartDeviceApp {
     termo_widget: TermoWidget,
     socket_widget: SocketWidget,
+
+    receiver: Option<mpsc::Receiver<SensorData>>,
+}
+
+impl Default for SmartDeviceApp {
+    fn default() -> Self {
+        Self {
+            termo_widget: TermoWidget::default(),
+            socket_widget: SocketWidget::default(),
+            receiver: Some(tokio::runtime::Runtime::new().unwrap().block_on(device_server())),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -71,6 +86,11 @@ impl SocketWidget {
             _ => "N/A".into(),
         }
     }
+}
+
+enum SensorData {
+    SocketIndicator(Socket),
+    TermoIndicator(Termometer),
 }
 
 impl SmartDeviceApp {
@@ -139,18 +159,18 @@ impl SmartDeviceApp {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        Subscription::run(Self::some_worker)
+        Subscription::run(Self::worker)
     }
 
-    fn some_worker() -> impl Stream<Item = Message> {
+    fn worker() -> impl Stream<Item = Message> {
         stream::channel(32, |mut output| async move {
-            let (_sender, mut receiver) = mpsc::channel(100);
+            let (_sender, mut receiver) = mpsc::channel( 64);
 
             loop {
                 let input = receiver.select_next_some().await;
 
                 match input {
-                    InputData::SocketIndicator(s) => {
+                    SensorData::SocketIndicator(s) => {
                         let message = if s.state().get() {
                             Message::SocketOnline(s)
                         } else {
@@ -159,7 +179,7 @@ impl SmartDeviceApp {
 
                         let _ = output.send(message).await;
                     }
-                    InputData::TermoIndicator(t) => {
+                    SensorData::TermoIndicator(t) => {
                         let message = if t.state().get() {
                             Message::TermometerOnline(t)
                         } else {
@@ -174,7 +194,51 @@ impl SmartDeviceApp {
     }
 }
 
-enum InputData {
-    SocketIndicator(Socket),
-    TermoIndicator(Termometer),
+async fn device_server() -> mpsc::Receiver<SensorData> {
+    let (sender, receiver) = mpsc::channel::<SensorData>(64);
+
+    tokio::spawn(async move {
+        let listener = TcpListener::bind("localhost:8080").await.unwrap();
+
+        while let Ok((socket, _)) = listener.accept().await {
+            let mut tx_clone = sender.clone();
+
+            tokio::spawn(async move {
+
+                match handle_connection(socket).await {
+                    Some(SensorData::SocketIndicator(s)) => {
+                        let _ = tx_clone.send(SensorData::SocketIndicator(s)).await;
+                    }
+                    Some(SensorData::TermoIndicator(t)) => {
+                        let _ = tx_clone.send(SensorData::TermoIndicator(t)).await;
+                    }
+                    _ => {}
+                }
+            });
+        }
+    });
+
+    receiver
 }
+
+async fn handle_connection(mut socket: TcpStream) -> Option<SensorData> {
+    let mut buf = [0; 128];
+
+    let n = socket.read(&mut buf).await.unwrap();
+    let recieved = String::from_utf8_lossy(&buf[..n]);
+
+    if let Ok(t) = recieved.parse::<Termometer>() {
+        return Some(SensorData::TermoIndicator(t));
+    }
+
+    if let Ok(s) = recieved.parse::<Socket>() {
+        return Some(SensorData::SocketIndicator(s));
+    }
+
+    // Отправляем ответ клиенту
+    let response = format!("Ok: {}\n", recieved);
+    let _ = socket.write_all(response.as_bytes()).await;
+
+    None
+}
+

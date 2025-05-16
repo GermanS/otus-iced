@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-tokio ={ version = "*" }
+tokio ={ version = "1.44.1", features=["full"] }
 iced = {  version = "0.13", features = [ "tokio"] }
 regex = { version = "1.11.1" }
+anyhow = "*"
 
 [[bin]]
 name = "server"
