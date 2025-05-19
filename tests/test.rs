@@ -62,6 +62,25 @@ mod termometer_test {
         assert!(termometer.state().get(), "... state is 'on'");
     }
 
+
+    #[test]
+    fn positive_f32_in_string_v2() {
+        let message = "Termometer 0.000C State: on";
+
+        let result = Termometer::from_str(message);
+
+        assert!(result.is_ok(), "Looks like string has been parsed well");
+
+        let termometer = result.unwrap();
+
+        assert!(
+            termometer.temperature().get() == 0.000,
+            "Temperature is correct"
+        );
+
+        assert!(termometer.state().get(), "... state is 'on'");
+    }
+
     #[test]
     fn positive_u32_in_message() {
         let message = "Termometer 21C State: on";

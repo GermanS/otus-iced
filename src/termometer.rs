@@ -44,7 +44,7 @@ impl FromStr for Termometer {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re_temperature =
-            Regex::new(r"^Termometer(\s)+(\d+((\.\d)*)?)C\s+State:\s+(on|off)").unwrap();
+            Regex::new(r"^Termometer(\s)+(\d+((\.\d+)*)?)C\s+State:\s+(on|off)").unwrap();
 
         match re_temperature.captures(s) {
             Some(caps) => {

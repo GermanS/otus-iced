@@ -41,6 +41,8 @@ impl ThermometerApp {
                 if self.state {
                     self.temperature = value;
                 }
+
+                self.notify();
             }
         }
     }
