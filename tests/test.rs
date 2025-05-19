@@ -62,7 +62,6 @@ mod termometer_test {
         assert!(termometer.state().get(), "... state is 'on'");
     }
 
-
     #[test]
     fn positive_f32_in_string_v2() {
         let message = "Termometer 0.000C State: on";

@@ -1,7 +1,13 @@
 use std::sync::Arc;
 
 use iced::{
-    futures::{channel::mpsc::{self, Receiver, Sender}, SinkExt, Stream, StreamExt}, stream, widget::{self, Column, Row, Text}, Font, Length, Subscription, Task
+    Font, Length, Subscription, Task,
+    futures::{
+        SinkExt, Stream, StreamExt,
+        channel::mpsc::{self, Receiver, Sender},
+    },
+    stream,
+    widget::{self, Column, Row, Text},
 };
 use otus_iced::{socket::Socket, termometer::Termometer};
 
@@ -112,18 +118,18 @@ impl SmartDeviceApp {
     fn new() -> (Self, Task<Message>) {
         let (event_sender, event_receiver) = mpsc::channel::<SensorData>(32);
 
-        ( Self {
-            termo_widget: TermoWidget::default(),
-            socket_widget: SocketWidget::default(),
-            event_receiver: event_receiver,
-            command_sender: None,
-        },
+        (
+            Self {
+                termo_widget: TermoWidget::default(),
+                socket_widget: SocketWidget::default(),
+                event_receiver: event_receiver,
+                command_sender: None,
+            },
             Task::batch([
-                Task::perform(device_server(event_sender), |_| { Message::ServerStarted }),
-                widget::focus_next()
-            ])
+                Task::perform(device_server(event_sender), |_| Message::ServerStarted),
+                widget::focus_next(),
+            ]),
         )
-
     }
 
     fn update(&mut self, message: Message) {
@@ -133,7 +139,9 @@ impl SmartDeviceApp {
 
             Message::SocketOnline(s) => self.socket_online(s),
             Message::SocketOffline => self.socket_offline(),
-            Message::ServerStarted => {  println!("Server started") },
+            Message::ServerStarted => {
+                println!("Server started")
+            }
             Message::Ready(tx) => self.command_sender = Some(tx),
         }
     }
@@ -192,8 +200,7 @@ fn worker() -> impl Stream<Item = Message> {
 
         let (command_sender, mut command_receiver) = mpsc::channel(64);
 
-        let  _ = output.send(Message::Ready(command_sender)).await;
-
+        let _ = output.send(Message::Ready(command_sender)).await;
 
         loop {
             let input = command_receiver.select_next_some().await;
@@ -233,20 +240,19 @@ async fn device_server(tx: mpsc::Sender<SensorData>) {
 
             tokio::spawn(async move {
                 match handle_connection(tcp).await {
-                     Some(SensorData::SocketIndicator(s)) => {
-                         let _ = tx_clone.send(SensorData::SocketIndicator(s)).await;
-                     }
-                     Some(SensorData::TermoIndicator(t)) => {
-                         let _ = tx_clone.send(SensorData::TermoIndicator(t)).await;
-                     },
-                     None => {
+                    Some(SensorData::SocketIndicator(s)) => {
+                        let _ = tx_clone.send(SensorData::SocketIndicator(s)).await;
+                    }
+                    Some(SensorData::TermoIndicator(t)) => {
+                        let _ = tx_clone.send(SensorData::TermoIndicator(t)).await;
+                    }
+                    None => {
                         print!("Nothing is happend");
-                     }
+                    }
                 }
             });
         }
     });
-
 }
 
 async fn handle_connection(mut socket: TcpStream) -> Option<SensorData> {
