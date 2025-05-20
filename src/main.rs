@@ -218,16 +218,11 @@ async fn handle_connection(mut socket: TcpStream) -> Option<SensorData> {
     let n = socket.read(&mut buf).await.unwrap();
     let recieved = String::from_utf8_lossy(&buf[..n]);
 
-    println!("recived: {}", recieved);
-    //println!( "{}", recieved.parse::<Termometer>().is_err() );
-
     if let Ok(t) = recieved.parse::<Termometer>() {
-        println!("{:?}", t);
         return Some(SensorData::TermoIndicator(t));
     }
 
     if let Ok(s) = recieved.parse::<Socket>() {
-        println!("{:?}", s);
         return Some(SensorData::SocketIndicator(s));
     }
 
