@@ -86,7 +86,7 @@ impl ThermometerApp {
             slider(1.0..=100.0, self.temperature, Message::SliderChanged).step(1.0);
 
         let temperature_display =
-            Text::new(format!("Текущая температура: {:.1}", self.temperature))
+            Text::new(format!("Текущая температура: {:.1} С", self.temperature))
                 .font(roboto)
                 .size(24);
 

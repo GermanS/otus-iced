@@ -84,7 +84,7 @@ impl SocketApp {
 
         let power_slider = slider(1.0..=100.0, self.power, Message::SliderChanged).step(1.0);
 
-        let power_display = Text::new(format!("Текущая мощность: {:.1}", self.power))
+        let power_display = Text::new(format!("Текущая мощность: {:.1} Вт", self.power))
             .font(roboto)
             .size(24);
 
