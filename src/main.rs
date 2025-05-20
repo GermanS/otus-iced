@@ -4,12 +4,11 @@ use iced::{
     Font, Length, Subscription, Task,
     advanced::subscription::{EventStream, Hasher, Recipe, from_recipe},
     futures::{
-        SinkExt, Stream, StreamExt,
-        channel::mpsc::{self, Receiver, Sender},
+        SinkExt, StreamExt,
+        channel::mpsc::{self, Receiver},
         lock::Mutex,
         stream::BoxStream,
     },
-    stream,
     widget::{self, Column, Row, Text},
 };
 use otus_iced::{socket::Socket, termometer::Termometer};
@@ -246,7 +245,6 @@ impl Recipe for NetStream {
             let mut receiver = self.0.lock().await;
 
             while let Some(event) = receiver.next().await {
-
                 match event {
                     SensorData::SocketIndicator(s) => {
                         if s.state().get() {
