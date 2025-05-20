@@ -74,3 +74,7 @@ cargo clippy
 > cargo run --example cli_termo
 
 ```
+
+### Результат
+
+![otus-iced](https://github.com/user-attachments/assets/e688cd47-7831-451e-85fe-a2cdf4183ade)
