@@ -66,3 +66,11 @@ cargo clippy
 ---
 
 Удачи в выполнении домашнего задания! 🚀
+
+```bash
+# команды запуска приложений
+> cargo run
+> cargo run --example cli_socket
+> cargo run --example cli_termo
+
+```
