@@ -7,7 +7,7 @@ use iced::{
 use otus_iced::{power::Power, socket::Socket, state::DeviceState};
 
 pub fn main() -> iced::Result {
-    iced::application("Термометер", SocketApp::update, SocketApp::view)
+    iced::application("Розетка", SocketApp::update, SocketApp::view)
         .window_size(iced::Size::new(450f32, 225f32))
         .theme(|_| iced::Theme::GruvboxDark)
         .run()
@@ -82,7 +82,7 @@ impl SocketApp {
 
         let power_label = Text::new("Розетка").font(roboto).size(32);
 
-        let power_slider = slider(1.0..=100.0, self.power, Message::SliderChanged).step(1.0);
+        let power_slider = slider(Power::MIN_POWER..=Power::MAX_POWER, self.power, Message::SliderChanged).step(Power::GRADUATION);
 
         let power_display = Text::new(format!("Текущая мощность: {:.1} Вт", self.power))
             .font(roboto)

@@ -18,6 +18,10 @@ use tokio::{
     net::{TcpListener, TcpStream},
 };
 
+const STATUS_OFFLINE: &str = "Статуc: Offline";
+const STATUS_ONLINE: &str = "Статуc: Online";
+const VALUE_NA: &str = "N/A";
+
 pub fn main() -> iced::Result {
     iced::application("Устройства", SmartDeviceApp::update, SmartDeviceApp::view)
         .window_size(iced::Size::new(900f32, 225f32))
@@ -54,15 +58,15 @@ struct TermoWidget {
 impl TermoWidget {
     fn status(&self) -> &str {
         match self.state {
-            true => "Статуc: Online",
-            _ => "Статуc: Offline",
+            true => STATUS_ONLINE,
+            _ => STATUS_OFFLINE,
         }
     }
 
     fn value(&self) -> String {
         match self.state {
             true => format!("Текущая температура: {:.1} C", self.value),
-            _ => "N/A".into(),
+            _ => VALUE_NA.into(),
         }
     }
 }
@@ -76,15 +80,15 @@ struct SocketWidget {
 impl SocketWidget {
     fn status(&self) -> &str {
         match self.state {
-            true => "Online",
-            _ => "Offline",
+            true => STATUS_ONLINE,
+            _ => STATUS_OFFLINE,
         }
     }
 
     fn value(&self) -> String {
         match self.state {
             true => format!("Текущая мощность: {:.1} Вт", self.value),
-            _ => "N/A".into(),
+            _ => VALUE_NA.into(),
         }
     }
 }
