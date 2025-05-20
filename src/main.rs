@@ -14,7 +14,7 @@ use iced::{
 use otus_iced::{socket::Socket, termometer::Termometer};
 
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::AsyncReadExt,
     net::{TcpListener, TcpStream},
 };
 
@@ -224,9 +224,6 @@ async fn handle_connection(mut socket: TcpStream) -> Option<SensorData> {
     if let Ok(s) = recieved.parse::<Socket>() {
         return Some(SensorData::SocketIndicator(s));
     }
-
-    let response = format!("Ok: {}\n", recieved);
-    let _ = socket.write_all(response.as_bytes()).await;
 
     None
 }
